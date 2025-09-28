@@ -5,9 +5,10 @@ spring:
   application:
     name: studyworld
   datasource:
-    url: ${SPRING_DATASOURCE_URL:}
-    username: ${SPRING_DATASOURCE_USERNAME:}
-    password: ${SPRING_DATASOURCE_PASSWORD:}
+    # Use Railway-provided PG* variables directly
+    url: jdbc:postgresql://${PGHOST}:${PGPORT:5432}/${PGDATABASE}
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
     driver-class-name: org.postgresql.Driver
   sql:
     init:

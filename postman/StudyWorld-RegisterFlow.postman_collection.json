@@ -1,0 +1,190 @@
+{
+  "info": {
+    "name": "StudyWorld - Register Flow",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Register",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const ts = Date.now();",
+              "pm.collectionVariables.set('email', `test+${ts}@example.com`);",
+              "pm.collectionVariables.set('password', 'Passw0rd!Passw0rd!');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Created (201)', function () {",
+              "  pm.response.to.have.status(201);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/register"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"phone\": \"1234567890\"\n}"
+        },
+        "description": "Registers a new user. Email and password are generated in the pre-request script."
+      }
+    },
+    {
+      "name": "Login (before verify)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Unauthorized (401) - not verified', function () {",
+              "  pm.response.to.have.status(401);",
+              "  try {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.message).to.include('verified');",
+              "  } catch (e) { /* ignore if not JSON */ }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/login"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+        },
+        "description": "Attempts login right after registration; should fail with 401 because email is not yet verified."
+      }
+    },
+    {
+      "name": "Verify Email (set verifyToken first)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('OK (200)', function () {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/auth/verify?token={{verifyToken}}"
+        },
+        "description": "Manually set collection variable `verifyToken` before running. Obtain from DB: SELECT token FROM verification_tokens ORDER BY created_at DESC LIMIT 1;"
+      }
+    },
+    {
+      "name": "Login (after verify)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('OK (200)', function () { pm.response.to.have.status(200); });",
+              "const json = pm.response.json();",
+              "pm.collectionVariables.set('accessToken', json.accessToken);",
+              "pm.collectionVariables.set('refreshToken', json.refreshToken);",
+              "pm.test('Tokens present', function () {",
+              "  pm.expect(json.accessToken).to.be.a('string');",
+              "  pm.expect(json.refreshToken).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/login"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+        },
+        "description": "Logs in after verifying email. Captures access/refresh tokens into collection variables."
+      }
+    },
+    {
+      "name": "Me (with Bearer token)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('OK (200)', function () { pm.response.to.have.status(200); });",
+              "const json = pm.response.json();",
+              "pm.test('Email matches', function () { pm.expect(json.email).to.eql(pm.collectionVariables.get('email')); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/me"
+        },
+        "description": "Returns the authenticated user using the access token."
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api" },
+    { "key": "email", "value": "" },
+    { "key": "password", "value": "" },
+    { "key": "verifyToken", "value": "" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" }
+  ]
+}
+
