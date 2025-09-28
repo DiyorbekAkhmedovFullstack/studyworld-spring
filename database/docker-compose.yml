@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: studyworld-postgres
+    environment:
+      POSTGRES_DB: studyworld
+      POSTGRES_USER: studyworld
+      POSTGRES_PASSWORD: studyworld
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./data.sql:/docker-entrypoint-initdb.d/02-data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U studyworld"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped

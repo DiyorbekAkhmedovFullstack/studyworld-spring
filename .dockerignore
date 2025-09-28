@@ -1,0 +1,12 @@
+# Ignore build and VCS artifacts
+target/
+.git/
+.gitignore
+.DS_Store
+node_modules/
+**/*.iml
+.idea/
+.vscode/
+database/
+frontend/
+

@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: studyworld
+  datasource:
+    url: jdbc:postgresql://localhost:5432/studyworld
+    username: studyworld
+    password: studyworld
+    driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: never
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: studiwelt.team@gmail.com
+    password: tfld igvv vmse vecb
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+app:
+  frontend-url: http://localhost:4200
+  jwt:
+    issuer: studyworld
+    secret: b2PqBQh8FnN6j/nUt4Aem5XRABdg9J4y7bKFAgRnTp1R7Y4UbdFZcfK4EvjKkkYbQfdP0SE0Im77jGItWdBOeg==
+    access-token-ttl: PT15M
+    refresh-token-ttl: P7D
+    mfa-token-ttl: PT5M
+  mfa:
+    issuer: StudyWorld
+    qr-width: 300
+    qr-height: 300
+  security:
+    max-failed-attempts: 6
+    lockout-duration: PT15M
+    password-expiry: P90D
+  verification:
+    token-ttl: PT24H
+  password-reset:
+    token-ttl: PT1H
