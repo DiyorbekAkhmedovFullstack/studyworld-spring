@@ -10,10 +10,10 @@ spring:
     init:
       mode: never
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: studiwelt.team@gmail.com
-    password: tfld igvv vmse vecb
+    host:
+    port:
+    username:
+    password:
     properties:
       mail:
         smtp:

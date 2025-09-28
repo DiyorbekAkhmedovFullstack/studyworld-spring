@@ -13,10 +13,10 @@ spring:
     init:
       mode: never
   mail:
-    host: ${SPRING_MAIL_HOST:}
-    port: ${SPRING_MAIL_PORT:}
-    username: ${SPRING_MAIL_USERNAME:}
-    password: ${SPRING_MAIL_PASSWORD:}
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:studiwelt.team@gmail.com}
+    password: ${SPRING_MAIL_PASSWORD:tfld igvv vmse vecb}
     properties:
       mail:
         smtp:
