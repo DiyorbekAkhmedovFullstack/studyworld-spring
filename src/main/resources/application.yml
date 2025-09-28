@@ -27,7 +27,7 @@ spring:
             required: true
 
 app:
-  frontend-url: ${APP_FRONTEND_URL:http://localhost:4200}
+  frontend-url: ${APP_FRONTEND_URL:https://studyworld-angular-production.up.railway.app}
   jwt:
     issuer: ${APP_JWT_ISSUER:studyworld}
     secret: ${APP_JWT_SECRET:b2PqBQh8FnN6j/nUt4Aem5XRABdg9J4y7bKFAgRnTp1R7Y4UbdFZcfK4EvjKkkYbQfdP0SE0Im77jGItWdBOeg==}
