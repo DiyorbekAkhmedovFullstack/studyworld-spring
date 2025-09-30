@@ -9,21 +9,15 @@ spring:
   sql:
     init:
       mode: never
-  mail:
-    host:
-    port:
-    username:
-    password:
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
+  mail: { }
 
 app:
   frontend-url: http://localhost:4200
+  mail:
+    from-email:
+    from-name: StudyWorld (Dev)
+    resend:
+      api-key:
   jwt:
     issuer: studyworld
     secret: b2PqBQh8FnN6j/nUt4Aem5XRABdg9J4y7bKFAgRnTp1R7Y4UbdFZcfK4EvjKkkYbQfdP0SE0Im77jGItWdBOeg==

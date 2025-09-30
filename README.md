@@ -28,7 +28,7 @@ This boots PostgreSQL with schema and seed scripts from `schema.sql` / `data.sql
 
 ### Backend
 
-Configure `src/main/resources/application.yml` as needed (SMTP, JWT secret, frontend URL, datasource).
+Configure `src/main/resources/application.yml` as needed (Resend email, JWT secret, frontend URL, datasource).
 
 Run the API:
 
@@ -63,7 +63,11 @@ Features include login with MFA hand-off, registration, verification feedback, r
 ## Development Notes
 
 - JWT signing secret must be a Base64-encoded 512-bit key; update `app.jwt.secret` before production.
-- Email sending uses `JavaMailSender`; configure `spring.mail.*` or swap with an external provider.
+- Email sending uses Resend over HTTPS only (no SMTP, no mocks). The app fails fast if not configured.
+  - Required env vars:
+    - `APP_MAIL_FROM` (e.g., `support@studiwelt.com`) — must be a verified Resend sender/domain
+    - `APP_MAIL_FROM_NAME` (display name)
+    - `APP_RESEND_API_KEY` (Resend API key)
 - Tokens are persisted to allow logout and force rotation on refresh.
 - MFA uses TOTP (RFC 6238) with QR provisioning (Google Authenticator compatible).
 
@@ -98,7 +102,6 @@ frontend (Angular)
 
 ## Next Steps
 
-- Wire a real Mail provider (e.g., Postmark, SES) and supply env-specific SMTP credentials.
 - Add integration tests (registration, login, MFA, reset) and component/unit tests for Angular flows.
 - Consider introducing flyway/liquibase migrations as schema evolves.
 - Harden refresh-token reuse detection and rate-limit verification/resend endpoints.
@@ -112,11 +115,12 @@ frontend (Angular)
   - In Variables, set:
     - `SPRING_DATASOURCE_URL` (Railway provides this when you link Postgres; prefer `jdbc:postgresql://...` form)
     - `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`
-    - `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`, `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD` (or use another mail provider)
+    - Resend email settings: `APP_MAIL_FROM`, `APP_MAIL_FROM_NAME`, `APP_RESEND_API_KEY`
     - `APP_JWT_SECRET` (Base64-encoded 512-bit key; override the default)
     - Optionally `APP_FRONTEND_URL` to your deployed frontend URL
   - Deploy. Railway builds the Docker image and runs: `java -Dserver.port=$PORT -jar app.jar`.
 
 Notes:
+- Railway blocks outbound SMTP. This backend uses Resend’s HTTPS API only.
 - The default profile reads configuration from environment variables. Local development can continue using `application-dev.yml` with `SPRING_PROFILES_ACTIVE=dev`.
 - Ensure the database URL uses the `jdbc:postgresql://` format. If Railway only provides a `postgresql://` URL, convert it to `jdbc:postgresql://` and keep the same host, port, db, user, and password.

@@ -2,6 +2,7 @@ package com.studyworld;
 
 import com.studyworld.config.AppProperties;
 import com.studyworld.config.JwtProperties;
+import com.studyworld.config.MailProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -11,7 +12,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-@EnableConfigurationProperties({AppProperties.class, JwtProperties.class})
+@EnableConfigurationProperties({AppProperties.class, JwtProperties.class, MailProperties.class})
 public class Studyworld {
     private static final Logger log = LoggerFactory.getLogger(Studyworld.class);
 

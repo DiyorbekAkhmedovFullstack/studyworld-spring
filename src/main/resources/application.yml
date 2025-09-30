@@ -13,21 +13,14 @@ spring:
   sql:
     init:
       mode: never
-  mail:
-    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
-    port: ${SPRING_MAIL_PORT:587}
-    username: ${SPRING_MAIL_USERNAME:studiwelt.team@gmail.com}
-    password: ${SPRING_MAIL_PASSWORD:tfld igvv vmse vecb}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
 
 app:
   frontend-url: ${APP_FRONTEND_URL:https://studyworld-angular-production.up.railway.app}
+  mail:
+    from-email: ${APP_MAIL_FROM:diyorbek.fullstack@gmail.com}
+    from-name: ${APP_MAIL_FROM_NAME:StudyWorld}
+    resend:
+      api-key: ${APP_RESEND_API_KEY:re_c4FJD24D_F6E6i9zpBKa9Dhxm2ZhBGiVb}
   jwt:
     issuer: ${APP_JWT_ISSUER:studyworld}
     secret: ${APP_JWT_SECRET:b2PqBQh8FnN6j/nUt4Aem5XRABdg9J4y7bKFAgRnTp1R7Y4UbdFZcfK4EvjKkkYbQfdP0SE0Im77jGItWdBOeg==}
