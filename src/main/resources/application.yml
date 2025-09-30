@@ -17,10 +17,10 @@ spring:
 app:
   frontend-url: ${APP_FRONTEND_URL:https://studyworld-angular-production.up.railway.app}
   mail:
-    from-email: ${APP_MAIL_FROM:diyorbek@mailbox.org}
+    from-email: ${APP_MAIL_FROM:support@studiwelt.com}
     from-name: ${APP_MAIL_FROM_NAME:StudyWorld}
     resend:
-      api-key: ${APP_RESEND_API_KEY:re_e1AXUJ3c_BPj65Ncoef49t1yjeu43jW7s}
+      api-key: ${APP_RESEND_API_KEY:re_c4FJD24D_F6E6i9zpBKa9Dhxm2ZhBGiVb}
   jwt:
     issuer: ${APP_JWT_ISSUER:studyworld}
     secret: ${APP_JWT_SECRET:b2PqBQh8FnN6j/nUt4Aem5XRABdg9J4y7bKFAgRnTp1R7Y4UbdFZcfK4EvjKkkYbQfdP0SE0Im77jGItWdBOeg==}
