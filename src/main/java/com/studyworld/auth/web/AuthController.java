@@ -91,6 +91,26 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    // Some environments or intermediaries may incorrectly issue a GET on refresh.
+    // Support GET by reading the HttpOnly cookie only (no token in URL).
+    @GetMapping("/refresh")
+    public ResponseEntity<LoginResponse> refreshGet(
+            @CookieValue(value = "refresh_token", required = false) String refreshCookie,
+            HttpServletRequest httpRequest
+    ) {
+        if (refreshCookie == null || refreshCookie.isBlank()) {
+            throw new BadRequestException("Refresh token required");
+        }
+        LoginResponse response = authService.refresh(new TokenRefreshRequest(refreshCookie));
+        if (response.refreshToken() != null) {
+            ResponseCookie cookie = buildRefreshCookie(response.refreshToken(), httpRequest);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(response);
+        }
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authorizationHeader, HttpServletRequest httpRequest) {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
