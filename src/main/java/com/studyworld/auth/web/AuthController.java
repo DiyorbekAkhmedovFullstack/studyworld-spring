@@ -160,8 +160,23 @@ public class AuthController {
 
     private boolean isSecure(HttpServletRequest request) {
         String forwardedProto = request.getHeader("X-Forwarded-Proto");
-        if (forwardedProto != null) {
-            return "https".equalsIgnoreCase(forwardedProto);
+        if (forwardedProto != null && !forwardedProto.isBlank()) {
+            String first = forwardedProto.split(",")[0].trim();
+            if ("https".equalsIgnoreCase(first)) {
+                return true;
+            }
+        }
+        String forwardedSsl = request.getHeader("X-Forwarded-Ssl");
+        if ("on".equalsIgnoreCase(forwardedSsl)) {
+            return true;
+        }
+        String forwardedScheme = request.getHeader("X-Forwarded-Scheme");
+        if ("https".equalsIgnoreCase(forwardedScheme)) {
+            return true;
+        }
+        String forwarded = request.getHeader("Forwarded");
+        if (forwarded != null && forwarded.toLowerCase().contains("proto=https")) {
+            return true;
         }
         return request.isSecure();
     }
