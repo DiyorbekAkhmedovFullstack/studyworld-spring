@@ -269,8 +269,8 @@ public class DefaultAuthService implements AuthService {
         String link = appProperties.frontendUrl() + "/verify?token=" + token;
         String body = "<p>Welcome to StudyWorld!</p>" +
                 "<p>Please confirm your email by clicking <a href='" + link + "'>here</a>.</p>";
-        // Log the link as well for convenience during testing
-        log.info("Verification link for {}: {}", email, link);
+        // Avoid logging raw verification links in production
+        log.info("Verification email queued for {}", email);
         mailService.sendHtmlMail(email, "Verify your StudyWorld account", body);
     }
 
@@ -278,8 +278,8 @@ public class DefaultAuthService implements AuthService {
         String link = appProperties.frontendUrl() + "/reset-password/confirm?token=" + token;
         String body = "<p>We received a password reset request.</p>" +
                 "<p>Reset your password by clicking <a href='" + link + "'>this link</a>.</p>";
-        // Log the link as well for convenience during testing
-        log.info("Password reset link for {}: {}", email, link);
+        // Avoid logging raw reset links in production
+        log.info("Password reset email queued for {}", email);
         mailService.sendHtmlMail(email, "Reset your StudyWorld password", body);
     }
 

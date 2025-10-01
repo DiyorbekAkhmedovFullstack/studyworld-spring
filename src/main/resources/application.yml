@@ -15,7 +15,8 @@ spring:
       mode: never
 
 app:
-  frontend-url: ${APP_FRONTEND_URL:https://studyworld-angular-production.up.railway.app}
+  # Set your public frontend origin (prod). No Railway default for safety.
+  frontend-url: ${APP_FRONTEND_URL:https://studiwelt.com}
   mail:
     from-email: ${APP_MAIL_FROM:support@studiwelt.com}
     from-name: ${APP_MAIL_FROM_NAME:StudyWorld}
