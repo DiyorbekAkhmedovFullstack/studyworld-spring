@@ -4,6 +4,7 @@ import com.studyworld.auth.service.ApplicationUserDetailsService;
 import com.studyworld.config.AppProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -43,11 +44,11 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
                             // Ensure unauthenticated requests yield 401 so the frontend can trigger refresh
-                            response.sendError(javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             // Preserve 403 for authenticated users without required permissions
-                            response.sendError(javax.servlet.http.HttpServletResponse.SC_FORBIDDEN);
+                            response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         })
                 )
                 .authorizeHttpRequests(auth -> auth
