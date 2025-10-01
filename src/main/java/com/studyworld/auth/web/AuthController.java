@@ -73,10 +73,11 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<LoginResponse> refresh(
             @CookieValue(value = "refresh_token", required = false) String refreshCookie,
-            @Valid @RequestBody(required = false) TokenRefreshRequest request,
+            @RequestBody(required = false) TokenRefreshRequest request,
             HttpServletRequest httpRequest
     ) {
-        String token = request != null ? request.refreshToken() : refreshCookie;
+        String candidate = request != null ? request.refreshToken() : null;
+        String token = (candidate != null && !candidate.isBlank()) ? candidate : refreshCookie;
         if (token == null || token.isBlank()) {
             throw new BadRequestException("Refresh token required");
         }
