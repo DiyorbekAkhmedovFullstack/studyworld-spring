@@ -16,6 +16,7 @@ import com.studyworld.common.exception.UnauthorizedException;
 import com.studyworld.common.mapper.UserMapper;
 import com.studyworld.config.AppProperties;
 import com.studyworld.mail.service.MailService;
+import com.studyworld.mail.template.EmailTemplates;
 import com.studyworld.mfa.service.MfaService;
 import com.studyworld.token.model.TokenType;
 import com.studyworld.token.repository.PasswordResetTokenRepository;
@@ -269,9 +270,7 @@ public class DefaultAuthService implements AuthService {
         String link = appProperties.frontendUrl() + "/verify#token=" + token;
         var ttl = verificationTtl();
         String ttlText = humanize(ttl);
-        String body = "<p>Welcome to StudyWorld!</p>" +
-                "<p>Please confirm your email by clicking <a href='" + link + "'>here</a>.</p>" +
-                "<p><strong>Security note:</strong> This link expires in " + ttlText + ".</p>";
+        String body = EmailTemplates.verificationEmail(link, ttlText);
         // Avoid logging raw verification links in production
         log.info("Verification email queued for {}", email);
         mailService.sendHtmlMail(email, "Verify your StudyWorld account", body);
@@ -281,9 +280,7 @@ public class DefaultAuthService implements AuthService {
         String link = appProperties.frontendUrl() + "/reset-password/confirm#token=" + token;
         var ttl = passwordResetTtl();
         String ttlText = humanize(ttl);
-        String body = "<p>We received a password reset request.</p>" +
-                "<p>Reset your password by clicking <a href='" + link + "'>this link</a>.</p>" +
-                "<p><strong>Security note:</strong> This link expires in " + ttlText + ". If you didn’t request a reset, you can safely ignore this message.</p>";
+        String body = EmailTemplates.passwordResetEmail(link, ttlText);
         // Avoid logging raw reset links in production
         log.info("Password reset email queued for {}", email);
         mailService.sendHtmlMail(email, "Reset your StudyWorld password", body);
