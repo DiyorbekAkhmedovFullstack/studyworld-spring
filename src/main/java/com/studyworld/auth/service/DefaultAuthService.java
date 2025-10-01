@@ -17,6 +17,8 @@ import com.studyworld.common.mapper.UserMapper;
 import com.studyworld.config.AppProperties;
 import com.studyworld.mail.service.MailService;
 import com.studyworld.mail.template.EmailTemplates;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import com.studyworld.mfa.service.MfaService;
 import com.studyworld.token.model.TokenType;
 import com.studyworld.token.repository.PasswordResetTokenRepository;
@@ -56,6 +58,8 @@ public class DefaultAuthService implements AuthService {
     private final MailService mailService;
     private final AppProperties appProperties;
     private final MfaService mfaService;
+    private final EmailTemplates emailTemplates;
+    private final MessageSource messages;
 
     public DefaultAuthService(UserService userService,
                               PasswordEncoder passwordEncoder,
@@ -65,7 +69,9 @@ public class DefaultAuthService implements AuthService {
                               AuthenticationManager authenticationManager,
                               MailService mailService,
                               AppProperties appProperties,
-                              MfaService mfaService) {
+                              MfaService mfaService,
+                              EmailTemplates emailTemplates,
+                              MessageSource messages) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.verificationTokenRepository = verificationTokenRepository;
@@ -75,6 +81,8 @@ public class DefaultAuthService implements AuthService {
         this.mailService = mailService;
         this.appProperties = appProperties;
         this.mfaService = mfaService;
+        this.emailTemplates = emailTemplates;
+        this.messages = messages;
     }
 
     @Override
@@ -269,35 +277,66 @@ public class DefaultAuthService implements AuthService {
     private void sendVerificationMail(String email, UUID token) {
         String link = appProperties.frontendUrl() + "/verify#token=" + token;
         var ttl = verificationTtl();
-        String ttlText = humanize(ttl);
-        String body = EmailTemplates.verificationEmail(link, ttlText);
+        var locale = LocaleContextHolder.getLocale();
+        String ttlText = humanize(ttl, locale);
+        String body = emailTemplates.verificationEmail(link, ttlText, locale);
         // Avoid logging raw verification links in production
         log.info("Verification email queued for {}", email);
-        mailService.sendHtmlMail(email, "Verify your StudyWorld account", body);
+        String subject = messages.getMessage("email.verify.subject", null, locale);
+        mailService.sendHtmlMail(email, subject, body);
     }
 
     private void sendPasswordResetMail(String email, UUID token) {
         String link = appProperties.frontendUrl() + "/reset-password/confirm#token=" + token;
         var ttl = passwordResetTtl();
-        String ttlText = humanize(ttl);
-        String body = EmailTemplates.passwordResetEmail(link, ttlText);
+        var locale = LocaleContextHolder.getLocale();
+        String ttlText = humanize(ttl, locale);
+        String body = emailTemplates.passwordResetEmail(link, ttlText, locale);
         // Avoid logging raw reset links in production
         log.info("Password reset email queued for {}", email);
-        mailService.sendHtmlMail(email, "Reset your StudyWorld password", body);
+        String subject = messages.getMessage("email.reset.subject", null, locale);
+        mailService.sendHtmlMail(email, subject, body);
     }
 
-    private String humanize(Duration d) {
+    private String humanize(Duration d, java.util.Locale locale) {
         long seconds = d.getSeconds();
         long minutes = (seconds + 59) / 60; // round up to next minute
-        if (minutes < 60) {
-            return minutes + (minutes == 1 ? " minute" : " minutes");
+        if ("ru".equalsIgnoreCase(locale.getLanguage())) {
+            if (minutes < 60) {
+                return ruPlural(minutes, "минута", "минуты", "минут");
+            }
+            long hours = (minutes + 59) / 60;
+            if (hours < 24) {
+                return ruPlural(hours, "час", "часа", "часов");
+            }
+            long days = (hours + 23) / 24;
+            return ruPlural(days, "день", "дня", "дней");
+        } else {
+            if (minutes < 60) {
+                return minutes + (minutes == 1 ? " minute" : " minutes");
+            }
+            long hours = (minutes + 59) / 60;
+            if (hours < 24) {
+                return hours + (hours == 1 ? " hour" : " hours");
+            }
+            long days = (hours + 23) / 24;
+            return days + (days == 1 ? " day" : " days");
         }
-        long hours = (minutes + 59) / 60;
-        if (hours < 24) {
-            return hours + (hours == 1 ? " hour" : " hours");
+    }
+
+    private String ruPlural(long n, String one, String few, String many) {
+        long nAbs = Math.abs(n);
+        long mod10 = nAbs % 10;
+        long mod100 = nAbs % 100;
+        String unit;
+        if (mod10 == 1 && mod100 != 11) {
+            unit = one;
+        } else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+            unit = few;
+        } else {
+            unit = many;
         }
-        long days = (hours + 23) / 24;
-        return days + (days == 1 ? " day" : " days");
+        return n + " " + unit;
     }
 
     private AppProperties.SecurityProperties securityProperties() {
@@ -313,11 +352,11 @@ public class DefaultAuthService implements AuthService {
 
     private Duration verificationTtl() {
         Duration ttl = appProperties.verificationTokenTtl();
-        return ttl != null ? ttl : Duration.ofHours(24);
+        return ttl != null ? ttl : Duration.ofHours(1);
     }
 
     private Duration passwordResetTtl() {
         Duration ttl = appProperties.passwordResetTokenTtl();
-        return ttl != null ? ttl : Duration.ofHours(1);
+        return ttl != null ? ttl : Duration.ofMinutes(30);
     }
 }

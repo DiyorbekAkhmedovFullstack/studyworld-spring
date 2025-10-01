@@ -1,39 +1,42 @@
 package com.studyworld.mail.template;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Component;
 
-public final class EmailTemplates {
+@Component
+public class EmailTemplates {
 
-    private EmailTemplates() {}
+    private final MessageSource messages;
 
-    public static String verificationEmail(String verifyUrl, String ttlText) {
-        String intro = "<p>Welcome to <strong>StudiWelt</strong> — we’re excited to have you.</p>"
-                + "<p>To activate your account, confirm your email address.</p>";
-        String outro = "<p style=\"color:#6b7280;margin:24px 0 0\">This link expires in " + escape(ttlText) + ".</p>";
-        return actionEmail(
-                "Verify your email",
-                intro,
-                "Verify email",
-                verifyUrl,
-                outro
-        );
+    public EmailTemplates(MessageSource messages) {
+        this.messages = messages;
     }
 
-    public static String passwordResetEmail(String resetUrl, String ttlText) {
-        String intro = "<p>We received a request to reset your password.</p>"
-                + "<p>Click the button below to choose a new password.</p>";
-        String outro = "<p style=\"color:#6b7280;margin:24px 0 0\">This link expires in " + escape(ttlText) + ". If you didn’t request a reset, you can safely ignore this message.</p>";
-        return actionEmail(
-                "Reset your password",
-                intro,
-                "Reset password",
-                resetUrl,
-                outro
-        );
+    public String verificationEmail(String verifyUrl, String ttlText, Locale locale) {
+        String brand = m("email.brand", locale);
+        String heading = m("email.verify.heading", locale);
+        String intro = "<p>" + m("email.verify.intro1", locale) + "</p>" +
+                "<p>" + m("email.verify.intro2", locale) + "</p>";
+        String ctaText = m("email.verify.cta", locale);
+        String outro = "<p style=\"color:#6b7280;margin:24px 0 0\">" +
+                ms("email.verify.outro", locale, ttlText) + "</p>";
+        return actionEmail(brand, heading, intro, ctaText, verifyUrl, outro, locale);
     }
 
-    private static String actionEmail(String heading, String introHtml, String ctaText, String ctaUrl, String footerHtml) {
-        String brand = "StudiWelt";
+    public String passwordResetEmail(String resetUrl, String ttlText, Locale locale) {
+        String brand = m("email.brand", locale);
+        String heading = m("email.reset.heading", locale);
+        String intro = "<p>" + m("email.reset.intro1", locale) + "</p>" +
+                "<p>" + m("email.reset.intro2", locale) + "</p>";
+        String ctaText = m("email.reset.cta", locale);
+        String outro = "<p style=\"color:#6b7280;margin:24px 0 0\">" +
+                ms("email.reset.outro", locale, ttlText) + "</p>";
+        return actionEmail(brand, heading, intro, ctaText, resetUrl, outro, locale);
+    }
+
+    private String actionEmail(String brand, String heading, String introHtml, String ctaText, String ctaUrl, String footerHtml, Locale locale) {
         // Simple, inline-styled email compatible with most clients
         StringBuilder sb = new StringBuilder(2048);
         sb.append("<!doctype html><html><head><meta charset=\"")
@@ -71,11 +74,20 @@ public final class EmailTemplates {
         sb.append("<div style=\"text-align:center;color:#94a3b8;font-size:12px;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;margin:16px 0 24px;\">")
           .append("© ")
           .append(escape(brand))
-          .append(". All rights reserved.")
+          .append(". ")
+          .append(escape(m("email.footer", locale)))
           .append("</div>");
 
         sb.append("</body></html>");
         return sb.toString();
+    }
+
+    private String m(String key, Locale locale) {
+        return messages.getMessage(key, null, locale);
+    }
+
+    private String ms(String key, Locale locale, Object... args) {
+        return messages.getMessage(key, args, locale);
     }
 
     private static String escape(String s) {
@@ -91,4 +103,3 @@ public final class EmailTemplates {
         return escape(s).replace("'", "&#39;");
     }
 }
-
