@@ -28,7 +28,7 @@ app:
     refresh-token-ttl: ${APP_JWT_REFRESH_TTL:P7D}
     mfa-token-ttl: ${APP_JWT_MFA_TTL:PT5M}
   mfa:
-    issuer: ${APP_MFA_ISSUER:StudyWorld}
+    issuer: ${APP_MFA_ISSUER:StudiWelt}
     qr-width: ${APP_MFA_QR_WIDTH:300}
     qr-height: ${APP_MFA_QR_HEIGHT:300}
   security:

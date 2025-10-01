@@ -10,12 +10,18 @@ import com.studyworld.auth.dto.RegistrationRequest;
 import com.studyworld.auth.dto.ResendVerificationRequest;
 import com.studyworld.auth.dto.TokenRefreshRequest;
 import com.studyworld.auth.service.AuthService;
+import com.studyworld.common.exception.BadRequestException;
+import com.studyworld.config.JwtProperties;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,9 +32,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtProperties jwtProperties;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, JwtProperties jwtProperties) {
         this.authService = authService;
+        this.jwtProperties = jwtProperties;
     }
 
     @PostMapping("/register")
@@ -38,27 +46,61 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public LoginResponse login(@Valid @RequestBody LoginRequest request) {
-        return authService.authenticate(request);
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
+        LoginResponse response = authService.authenticate(request);
+        // Only set cookie when fully authenticated (no MFA step)
+        if (!response.mfaRequired() && response.refreshToken() != null) {
+            ResponseCookie cookie = buildRefreshCookie(response.refreshToken(), httpRequest);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(response);
+        }
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/mfa/verify")
-    public LoginResponse verifyMfa(@Valid @RequestBody MfaVerificationRequest request) {
-        return authService.verifyMfa(request);
+    public ResponseEntity<LoginResponse> verifyMfa(@Valid @RequestBody MfaVerificationRequest request, HttpServletRequest httpRequest) {
+        LoginResponse response = authService.verifyMfa(request);
+        if (response.refreshToken() != null) {
+            ResponseCookie cookie = buildRefreshCookie(response.refreshToken(), httpRequest);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(response);
+        }
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/refresh")
-    public LoginResponse refresh(@Valid @RequestBody TokenRefreshRequest request) {
-        return authService.refresh(request);
+    public ResponseEntity<LoginResponse> refresh(
+            @CookieValue(value = "refresh_token", required = false) String refreshCookie,
+            @Valid @RequestBody(required = false) TokenRefreshRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        String token = request != null ? request.refreshToken() : refreshCookie;
+        if (token == null || token.isBlank()) {
+            throw new BadRequestException("Refresh token required");
+        }
+        LoginResponse response = authService.refresh(new TokenRefreshRequest(token));
+        if (response.refreshToken() != null) {
+            ResponseCookie cookie = buildRefreshCookie(response.refreshToken(), httpRequest);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(response);
+        }
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authorizationHeader) {
+    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authorizationHeader, HttpServletRequest httpRequest) {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String token = authorizationHeader.substring(7);
             authService.logout(token);
         }
-        return ResponseEntity.ok().build();
+        // Clear refresh cookie
+        ResponseCookie cleared = clearRefreshCookie(httpRequest);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cleared.toString())
+                .build();
     }
 
     @GetMapping("/verify")
@@ -88,5 +130,38 @@ public class AuthController {
     @GetMapping("/me")
     public AuthenticatedUser me() {
         return authService.me();
+    }
+
+    private ResponseCookie buildRefreshCookie(String refreshToken, HttpServletRequest request) {
+        boolean secure = isSecure(request);
+        // Use None for cross-site when secure, otherwise fall back to Lax for local dev
+        String sameSite = secure ? "None" : "Lax";
+        return ResponseCookie.from("refresh_token", refreshToken)
+                .httpOnly(true)
+                .secure(secure)
+                .sameSite(sameSite)
+                .path("/api/auth")
+                .maxAge(jwtProperties.refreshTokenTtl())
+                .build();
+    }
+
+    private ResponseCookie clearRefreshCookie(HttpServletRequest request) {
+        boolean secure = isSecure(request);
+        String sameSite = secure ? "None" : "Lax";
+        return ResponseCookie.from("refresh_token", "")
+                .httpOnly(true)
+                .secure(secure)
+                .sameSite(sameSite)
+                .path("/api/auth")
+                .maxAge(0)
+                .build();
+    }
+
+    private boolean isSecure(HttpServletRequest request) {
+        String forwardedProto = request.getHeader("X-Forwarded-Proto");
+        if (forwardedProto != null) {
+            return "https".equalsIgnoreCase(forwardedProto);
+        }
+        return request.isSecure();
     }
 }
