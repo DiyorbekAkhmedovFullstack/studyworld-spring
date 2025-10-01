@@ -267,8 +267,11 @@ public class DefaultAuthService implements AuthService {
 
     private void sendVerificationMail(String email, UUID token) {
         String link = appProperties.frontendUrl() + "/verify#token=" + token;
+        var ttl = verificationTtl();
+        String ttlText = humanize(ttl);
         String body = "<p>Welcome to StudyWorld!</p>" +
-                "<p>Please confirm your email by clicking <a href='" + link + "'>here</a>.</p>";
+                "<p>Please confirm your email by clicking <a href='" + link + "'>here</a>.</p>" +
+                "<p><strong>Security note:</strong> This link expires in " + ttlText + ".</p>";
         // Avoid logging raw verification links in production
         log.info("Verification email queued for {}", email);
         mailService.sendHtmlMail(email, "Verify your StudyWorld account", body);
@@ -276,11 +279,28 @@ public class DefaultAuthService implements AuthService {
 
     private void sendPasswordResetMail(String email, UUID token) {
         String link = appProperties.frontendUrl() + "/reset-password/confirm#token=" + token;
+        var ttl = passwordResetTtl();
+        String ttlText = humanize(ttl);
         String body = "<p>We received a password reset request.</p>" +
-                "<p>Reset your password by clicking <a href='" + link + "'>this link</a>.</p>";
+                "<p>Reset your password by clicking <a href='" + link + "'>this link</a>.</p>" +
+                "<p><strong>Security note:</strong> This link expires in " + ttlText + ". If you didn’t request a reset, you can safely ignore this message.</p>";
         // Avoid logging raw reset links in production
         log.info("Password reset email queued for {}", email);
         mailService.sendHtmlMail(email, "Reset your StudyWorld password", body);
+    }
+
+    private String humanize(Duration d) {
+        long seconds = d.getSeconds();
+        long minutes = (seconds + 59) / 60; // round up to next minute
+        if (minutes < 60) {
+            return minutes + (minutes == 1 ? " minute" : " minutes");
+        }
+        long hours = (minutes + 59) / 60;
+        if (hours < 24) {
+            return hours + (hours == 1 ? " hour" : " hours");
+        }
+        long days = (hours + 23) / 24;
+        return days + (days == 1 ? " day" : " days");
     }
 
     private AppProperties.SecurityProperties securityProperties() {

@@ -37,6 +37,6 @@ app:
     lockout-duration: ${APP_SECURITY_LOCKOUT:PT15M}
     password-expiry: ${APP_SECURITY_PASSWORD_EXPIRY:P90D}
   verification:
-    token-ttl: ${APP_VERIFICATION_TTL:PT24H}
+    token-ttl: ${APP_VERIFICATION_TTL:PT1H}
   password-reset:
-    token-ttl: ${APP_PASSWORD_RESET_TTL:PT1H}
+    token-ttl: ${APP_PASSWORD_RESET_TTL:PT30M}
