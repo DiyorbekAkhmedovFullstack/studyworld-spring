@@ -91,8 +91,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        // Primary frontend origin from configuration
         configuration.addAllowedOrigin(appProperties.frontendUrl());
+        // Production domains
         configuration.addAllowedOrigin("https://studiwelt.com");
+        configuration.addAllowedOrigin("https://www.studiwelt.com");
+        configuration.addAllowedOrigin("https://studyworld-angular-production.up.railway.app");
+        // Allow subdomains of studiwelt.com (www, staging, etc.)
+        configuration.addAllowedOriginPattern("https://*.studiwelt.com");
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
         configuration.setAllowCredentials(true);
