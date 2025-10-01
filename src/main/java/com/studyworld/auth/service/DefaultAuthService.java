@@ -266,7 +266,7 @@ public class DefaultAuthService implements AuthService {
     }
 
     private void sendVerificationMail(String email, UUID token) {
-        String link = appProperties.frontendUrl() + "/verify?token=" + token;
+        String link = appProperties.frontendUrl() + "/verify#token=" + token;
         String body = "<p>Welcome to StudyWorld!</p>" +
                 "<p>Please confirm your email by clicking <a href='" + link + "'>here</a>.</p>";
         // Avoid logging raw verification links in production
@@ -275,7 +275,7 @@ public class DefaultAuthService implements AuthService {
     }
 
     private void sendPasswordResetMail(String email, UUID token) {
-        String link = appProperties.frontendUrl() + "/reset-password/confirm?token=" + token;
+        String link = appProperties.frontendUrl() + "/reset-password/confirm#token=" + token;
         String body = "<p>We received a password reset request.</p>" +
                 "<p>Reset your password by clicking <a href='" + link + "'>this link</a>.</p>";
         // Avoid logging raw reset links in production
